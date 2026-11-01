@@ -1,0 +1,86 @@
+---
+title: Content Packs
+description: Creating content packs for Cactus addons.
+---
+
+# Content Packs
+
+Content packs are collections of features that can be enabled or disabled by users. They allow addon developers to group related functionality together, making it easier for users to manage and configure their experience.
+
+## Overview
+
+Content packs in Cactus extend the `ContentPack` class and define a set of features that are enabled or disabled as a group. They can include modules, commands, HUD elements, and other content types.
+
+## Creating a Content Pack
+
+### Basic Content Pack Structure
+
+```java
+public class MyContentPack extends ContentPack {
+    public MyContentPack() {
+        super("myContentPack", ActivationPolicy.DEFAULT_ENABLED, Items.DIAMOND);
+    }
+    
+    @Override
+    public void onEnable() {
+        // Pack enabled logic
+    }
+    
+    @Override
+    public void onDisable() {
+        // Pack disabled logic
+    }
+}
+```
+
+### Registration
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(ContentPack.class, ctx -> new MyContentPack());
+}
+```
+
+## Content Pack Types
+
+### Default Enabled
+
+Content packs that are enabled by default:
+
+```java
+public class DefaultEnabledPack extends ContentPack {
+    public DefaultEnabledPack() {
+        super("defaultEnabled", ActivationPolicy.DEFAULT_ENABLED, Items.EMERALD);
+    }
+}
+```
+
+### Default Disabled
+
+Content packs that are disabled by default:
+
+```java
+public class DefaultDisabledPack extends ContentPack {
+    public DefaultDisabledPack() {
+        super("defaultDisabled", ActivationPolicy.DEFAULT_DISABLED, Items.REDSTONE);
+    }
+}
+```
+
+### Always Enabled
+
+Content packs that cannot be disabled (used internally for built-in / core features):
+
+```java
+public class AlwaysEnabledPack extends ContentPack {
+    public AlwaysEnabledPack() {
+        super("alwaysEnabled", ActivationPolicy.ALWAYS_ENABLED, Items.NETHER_STAR);
+    }
+    
+    @Override
+    public void onDisable() {
+        // This will never be called
+    }
+}
+```

@@ -1,0 +1,214 @@
+---
+title: Commands
+description: Creating chat commands for Cactus addons.
+---
+
+# Commands
+
+Commands are chat-based interfaces that provide functionality to users. They allow users to trigger actions, change settings, and interact with your addon through text input.
+
+## Overview
+
+Cactus commands implement the `Command` interface and integrate with Minecraft's Brigadier command system. They can be simple one-liners or complex with subcommands and arguments.
+
+## Creating a Command
+
+### Basic Command Structure
+
+```java
+public class MyCommand implements Command {
+    @Override
+    public String getName() {
+        return "mycommand";
+    }
+    
+    @Override
+    public void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
+        builder.executes(context -> {
+            // Command logic
+            return 1;
+        });
+    }
+}
+```
+
+### Registration
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(Command.class, ctx -> new MyCommand());
+}
+```
+
+## Command Structure
+
+### Simple Command
+
+A command that executes a single action:
+
+```java
+public class SimpleCommand implements Command {
+    @Override
+    public String getName() {
+        return "simple";
+    }
+    
+    @Override
+    public void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
+        builder.executes(context -> {
+            ChatUtils.info("Simple command executed!");
+            return 1;
+        });
+    }
+}
+```
+
+### Command with Arguments
+
+A command that takes arguments:
+
+```java
+public class ArgCommand implements Command {
+    @Override
+    public String getName() {
+        return "argcommand";
+    }
+    
+    @Override
+    public void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
+        builder.then(argument("value", StringArgumentType.string())
+            .executes(context -> {
+                String value = StringArgumentType.getString(context, "value");
+                ChatUtils.info("Command executed with value: " + value);
+                return 1;
+            }));
+    }
+}
+```
+
+### Command with Subcommands
+
+A command with multiple subcommands:
+
+```java
+public class ComplexCommand implements Command {
+    @Override
+    public String getName() {
+        return "complex";
+    }
+    
+    @Override
+    public void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
+        // Subcommand 1
+        builder.then(literal("sub1")
+            .executes(context -> {
+                ChatUtils.info("Subcommand 1 executed");
+                return 1;
+            }));
+        
+        // Subcommand 2 with argument
+        builder.then(literal("sub2")
+            .then(argument("value", StringArgumentType.string())
+                .executes(context -> {
+                    String value = StringArgumentType.getString(context, "value");
+                    ChatUtils.info("Subcommand 2 executed with value: " + value);
+                    return 1;
+                })));
+        
+        // Subcommand 3 with multiple arguments
+        builder.then(literal("sub3")
+            .then(argument("name", StringArgumentType.string())
+                .then(argument("value", IntegerArgumentType.integer(1))
+                    .executes(context -> {
+                        String name = StringArgumentType.getString(context, "name");
+                        int value = IntegerArgumentType.getInteger(context, "value");
+                        ChatUtils.info("Subcommand 3 executed: " + name + " = " + value);
+                        return 1;
+                    }))));
+    }
+}
+```
+
+## Argument Types
+
+### String Arguments
+
+```java
+builder.then(argument("text", StringArgumentType.string())
+    .executes(context -> {
+        String text = StringArgumentType.getString(context, "text");
+        // Use text
+        return 1;
+    }));
+```
+
+### Integer Arguments
+
+```java
+builder.then(argument("number", IntegerArgumentType.integer(1))
+    .executes(context -> {
+        int number = IntegerArgumentType.getInteger(context, "number");
+        // Use number
+        return 1;
+    }));
+```
+
+### Float Arguments
+
+```java
+builder.then(argument("float", FloatArgumentType.floatArg(0.0f, 100.0f))
+    .executes(context -> {
+        float value = FloatArgumentType.getFloat(context, "float");
+        // Use value
+        return 1;
+    }));
+```
+
+### Boolean Arguments
+
+```java
+builder.then(argument("bool", StringArgumentType.word())
+    .suggests((context, builder) -> {
+        builder.suggest("true");
+        builder.suggest("false");
+        return builder.buildFuture();
+    })
+    .executes(context -> {
+        String bool = StringArgumentType.getString(context, "bool");
+        boolean value = Boolean.parseBoolean(bool);
+        // Use value
+        return 1;
+    }));
+```
+
+### Entity Arguments
+
+```java
+builder.then(argument("target", EntityArgumentType.player())
+    .executes(context -> {
+        ServerPlayer player = EntityArgumentType.getPlayer(context, "target");
+        // Use player
+        return 1;
+    }));
+```
+
+## Command Utilities
+
+### Chat Messages
+
+Use `ChatUtils` for consistent messaging:
+
+```java
+// Info message
+ChatUtils.info("This is an info message");
+
+// Error message
+ChatUtils.error("This is an error message");
+
+// Success message
+ChatUtils.success("This is a success message");
+
+// Action bar message
+ChatUtils.actionbar("This appears in the action bar");
+```

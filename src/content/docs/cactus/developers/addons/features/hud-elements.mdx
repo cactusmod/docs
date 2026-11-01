@@ -1,0 +1,39 @@
+---
+title: HUD Elements
+description: Creating custom HUD elements for Cactus addons.
+---
+
+# HUD Elements
+
+HUD (Heads-Up Display) elements are visual components that appear on the screen, providing information to users or enhancing the visual experience. Cactus addons can create custom HUD elements to display data, status indicators, or other visual information.
+
+## Overview
+
+HUD elements in Cactus extend the `HudElement` base class and can be customized to display various types of information. They can be static (fixed position) or dynamic (position can be changed by users).
+
+## Creating a HUD Element
+
+### Basic HUD Element Structure
+
+```java
+public class MyHudElement extends DynamicHudElement {
+    public MyHudElement() {
+        super("myHudElement", new Vector2i(40, 20) /* default size */);
+    }
+    
+    @Override
+    public void renderContent(GuiGraphicsExtractor graphics, int x, int y, int width, int height, int screenWidth, int screenHeight, float delta, boolean inEditor) {
+        // Rendering logic
+        guiGraphics.drawString(font, "My HUD Element", x, y, color);
+    }
+}
+```
+
+### Registration
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(HudElement.class, ctx -> new MyHudElement());
+}
+```

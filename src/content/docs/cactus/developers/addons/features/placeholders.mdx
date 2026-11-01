@@ -1,0 +1,77 @@
+---
+title: Placeholders
+description: Creating dynamic placeholders for Cactus addons.
+---
+
+Placeholders are dynamic text replacements that can be used throughout Cactus. They allow addon developers to create customizable text that displays real-time information, such as player stats, world data, or custom values.
+
+## Creating Placeholders
+
+```java
+// Registration
+registryBus.register(PlaceholderRegistration.class,
+    new PlaceholderRegistration("myPlaceholder", 
+        new StaticPlaceholderValue(
+            () -> System.currentTimeMillis() / 1000 + " seconds since 1970",
+            "???", // fallback, if the value getter returns null or throws an exception
+            () -> true  // Always available
+        )
+    )
+);
+```
+
+## Placeholder Mappers
+
+Placeholder mappers allow you to transform placeholder values using functions.
+
+### Basic Mapper
+
+```java
+// Registration
+registryBus.register(PlaceholderMapperRegistration.class,
+    new PlaceholderMapperRegistration<>(
+        String.class, 
+        "reverse", 
+        (input, function) -> new StringBuilder(input).reverse().toString()
+    )
+);
+```
+
+### Usage
+
+```
+{player.name:reverse} - Reverses the player name
+{player.name:upper} - Converts player name to uppercase
+```
+
+### Built-in Mappers
+
+Cactus provides several built-in mappers:
+
+#### String Mappers
+
+- `upper` - Convert to uppercase
+- `lower` - Convert to lowercase
+- `reverse` - Reverse the string
+- `trim` - Remove whitespace
+- `len` - Get string length
+
+#### Number Mappers
+
+- `short` - Format as short number (e.g., 1000 -> 1k)
+- `duration` - Format as duration (e.g., 3600 -> 1h)
+
+### Custom Mapper Example
+
+```java
+// Registration
+registryBus.register(PlaceholderMapperRegistration.class,
+    new PlaceholderMapperRegistration<>(
+        Integer.class, 
+        "percentage", 
+        (input, function) -> input + "%"
+    )
+);
+```
+
+Usage: `{player.health:percentage}` might output `20%`

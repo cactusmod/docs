@@ -1,0 +1,38 @@
+---
+title: Screenshot Providers
+description: Creating custom screenshot upload providers for Cactus addons.
+---
+
+Screenshot providers are services that allow users to upload screenshots to various platforms. Cactus addons can create custom providers to integrate with image hosting services, personal servers, or other upload destinations.
+
+## Overview
+
+Screenshot providers in Cactus extend the `ScreenshotUploadProvider` base class and implement the upload functionality. They handle the process of taking a screenshot, converting it to the appropriate format, and uploading it to a destination.
+
+## Creating a Screenshot Provider
+
+### Basic Provider Structure
+
+```java
+public class MyScreenshotProvider extends ScreenshotUploadProvider {
+    @Override
+    public String getName() {
+        return "My Provider";
+    }
+    
+    @Override
+    public CompletableFuture<String> upload(BufferedImage image) {
+        // Upload logic
+        return CompletableFuture.completedFuture("https://example.com/image123");
+    }
+}
+```
+
+### Registration
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(ScreenshotUploadProvider.class, ctx -> new MyScreenshotProvider());
+}
+```

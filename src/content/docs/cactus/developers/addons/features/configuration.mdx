@@ -1,0 +1,116 @@
+---
+title: Configuration
+description: Creating configuration files for Cactus addons.
+---
+
+Configuration files allow addons to store and manage settings, data, and user preferences. They provide a structured way to persist data between sessions and allow addons to store additional data besides cactus settings from modules & co.
+
+## Overview
+
+Configuration in Cactus extends the `FileConfiguration` base class and provides a flexible system for storing and retrieving data. Configurations can include settings, user data, cache data, and any other persistent information your addon needs.
+
+## Creating a Configuration
+
+### Basic Configuration Structure
+
+```java
+public class MyConfig extends FileConfiguration<MyConfig> {
+    public MyConfig(ConfigHandler handler) {
+        super("myConfig", handler);
+    }
+    
+    @Override
+    public void init() {
+        // Initialize settings
+    }
+    
+    @Override
+    public JsonObject toJson(TreeSerializerFilter filter) {
+        // Serialize to JSON
+        return new JsonObject();
+    }
+    
+    @Override
+    public MyConfig fromJson(JsonObject json) {
+        // Deserialize from JSON
+        return this;
+    }
+}
+```
+
+### Registration
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(FileConfiguration.class, ctx -> {
+        ConfigHandler handler = ctx.require(ConfigHandler.class);
+        return new MyConfig(handler);
+    });
+}
+```
+
+## Example
+
+```java
+public class DataConfig extends FileConfiguration<DataConfig> {
+    private List<String> recentItems = new ArrayList<>();
+    private Map<String, Integer> itemCounts = new HashMap<>();
+    
+    public DataConfig(ConfigHandler handler) {
+        super("dataConfig", handler);
+    }
+    
+    @Override
+    public JsonObject toJson(TreeSerializerFilter filter) {
+        JsonObject json = new JsonObject();
+        
+        // Add data
+        JsonArray itemsArray = new JsonArray();
+        recentItems.forEach(itemsArray::add);
+        json.add("recentItems", itemsArray);
+        
+        JsonObject countsObject = new JsonObject();
+        itemCounts.forEach(countsObject::addProperty);
+        json.add("itemCounts", countsObject);
+        
+        return json;
+    }
+    
+    @Override
+    public DataConfig fromJson(JsonObject json) {
+        // Load data
+        if (json.has("recentItems")) {
+            recentItems.clear();
+            json.getAsJsonArray("recentItems").forEach(element -> 
+                recentItems.add(element.getAsString())
+            );
+        }
+        
+        if (json.has("itemCounts")) {
+            itemCounts.clear();
+            JsonObject countsObject = json.getAsJsonObject("itemCounts");
+            for (String key : countsObject.keySet()) {
+                itemCounts.put(key, countsObject.get(key).getAsInt());
+            }
+        }
+        
+        return this;
+    }
+    
+    // Data access methods
+    public void addRecentItem(String item) {
+        recentItems.remove(item); // Remove if already exists
+        recentItems.add(0, item); // Add to front
+        
+        // Keep only last 10 items
+        if (recentItems.size() > 10) {
+            recentItems = recentItems.subList(0, 10);
+        }
+    }
+    
+    public void incrementItemCount(String item) {
+        itemCounts.put(item, itemCounts.getOrDefault(item, 0) + 1);
+    }
+}
+```

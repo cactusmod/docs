@@ -1,0 +1,70 @@
+---
+title: CactusMod
+description: Documentation for users and developers of CactusMod.
+template: splash
+editUrl: false
+lastUpdated: false
+hero:
+  title: CactusMod
+  tagline: "Your go-to toolkit mod for Minecraft: Java Edition - lightweight, simple and customizable."
+  image:
+    file: ../../../assets/icon.webp
+    alt: CactusMod icon
+  actions:
+    - text: Get Started
+      link: /cactus/users/getting-started/installation
+      icon: right-arrow
+    - text: Build Addons
+      link: /cactus/developers/addons
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What is CactusMod?
+
+CactusMod is a **client-side mod** for Minecraft: Java Edition, built for the Fabric loader and recent NeoForge versions, and your go-to toolkit packed with powerful tools, quality of life enhancements, and highly customizable features for all types of players.
+
+Instead of bundling everything, Cactus organizes its features into **content packs** you can toggle on and off as you like, so your game never gets bloated with things you don't use.
+The features that exist are kept in a simple, well-known Minecraft style: most things should explain themselves, and almost everything is customizable - from the accent color and chat prefix to module behavior.
+Cactus is actively maintained and developed together with its community; feature requests are taken into consideration and bugs get fixed.
+
+## User Documentation
+
+<CardGrid>
+	<LinkCard
+		title="Get Started"
+		description="Install CactusMod with your favorite launcher and get it running in minutes."
+		href="/cactus/users/getting-started/installation"
+	/>
+	<LinkCard
+		title="Configuration"
+		description="General mod settings and important options."
+		href="/cactus/users/getting-started/configuration"
+	/>
+	<LinkCard
+		title="Cosmetics"
+		description="Capes and other cosmetics - and how to obtain them."
+		href="/cactus/users/features/cosmetics"
+	/>
+</CardGrid>
+
+## Developer Documentation
+
+<CardGrid>
+	<LinkCard
+		title="Addon Development"
+		description="Build your own addons for cactus to integrate your features as modules, commands and more."
+		href="/cactus/developers/addons"
+	/>
+	<LinkCard
+		title="Contribute"
+		description="This documentation is still work-in-progress - contribute on our GitHub repository."
+		href="https://github.com/cactusmod/documentation"
+	/>
+</CardGrid>
+
+<br />
+
+Looking for what Cactus can do in detail? Check the [Features page](https://cactusmod.xyz/features/) on our website.

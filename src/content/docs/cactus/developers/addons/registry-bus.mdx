@@ -1,0 +1,131 @@
+---
+title: Registry Bus
+description: Understanding and using the Registry Bus in Cactus addons.
+---
+
+The Registry Bus is the core component of the Cactus addon system. It acts as a central registry where addons can register their content, and Cactus can retrieve and manage that content.
+
+## Overview
+
+The Registry Bus follows a two-phase registration system:
+
+1. **Registration Phase**: Addons register their content using the `register()` method
+2. **Completion Phase**: The Registry Bus "completes" each type of content, making it available to the rest of Cactus
+
+This system allows addons to register content without needing to know about each other, and ensures all content is properly initialized before being used.
+
+## Basic Usage
+
+### Registering Content
+
+To register content, use the `register()` method in your `onInitialize` method:
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    // Register a module
+    registryBus.register(Module.class, ctx -> new MyModule());
+    
+    // Register a command
+    registryBus.register(Command.class, ctx -> new MyCommand());
+    
+    // Register a HUD element
+    registryBus.register(HudElement.class, ctx -> new MyHudElement());
+}
+```
+
+Alternatively, you can register multiple instances of the same type like this, to avoid repeated register calls:
+
+```java
+registryBus.register(Module.class, ctx -> {
+    List<Module> modules = new ArrayList<>();
+    modules.add(new Module1());
+    modules.add(new Module2());
+    return modules;
+});
+```
+
+### Registration Context
+
+You can use the `RegistrationContext` provided by the `register` method to retrieve dependencies you might need for constructing content:
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(FileConfiguration.class, ctx -> {
+        // Access other services
+        ConfigHandler configHandler = ctx.require(ConfigHandler.class);
+        return new MyConfig(configHandler);
+    });
+}
+```
+
+By default, currently only an instance of `ConfigHandler` is provided to the registration context.
+
+## Example: Complete Addon
+
+Here's an example of a complete addon that registers multiple types of content:
+
+```java
+@CactusAddon(modId = "myaddon") // this is only required for NeoForge platform support
+public class MyAddon implements ICactusAddon {
+    
+    @Override
+    public void onInitialize(RegistryBus registryBus) {
+        // Register modules
+        registryBus.register(Module.class, ctx -> {
+            List<Module> modules = new ArrayList<>();
+            modules.add(new MyModule1());
+            modules.add(new MyModule2());
+            return modules;
+        });
+        
+        // Register commands
+        registryBus.register(Command.class, ctx -> {
+            List<Command> commands = new ArrayList<>();
+            commands.add(new MyCommand1());
+            commands.add(new MyCommand2());
+            return commands;
+        });
+        
+        // Register HUD elements
+        registryBus.register(HudElement.class, ctx -> new MyHudElement());
+        
+        // Register content pack
+        registryBus.register(ContentPack.class, ctx -> new MyContentPack());
+        
+        // Register configuration
+        registryBus.register(FileConfiguration.class, 
+            ctx -> new MyConfig(ctx.require(ConfigHandler.class))
+        );
+        
+        // Register placeholders
+        registryBus.register(PlaceholderRegistration.class,
+            new PlaceholderRegistration("myValue", new PlaceholderHandler.StaticPlaceholderValue(
+                () -> "Hello World!", // value resolver
+                "Fallback", // fallback if the resolved value is null, or the resolver throws an exception
+                () -> true // condition for your placeholder to be resolved
+            ))
+        );
+
+        // Register a placeholder mapper
+        registryBus.register(PlaceholderMapperRegistration.class,
+            new PlaceholderMapperRegistration<>(String.class, "reverse", 
+                (input, function) -> new StringBuilder(input).reverse().toString()
+            )
+        );
+    }
+    
+    @Override
+    public void onLoadComplete() {
+        // Called when all addons have been initialized
+        System.out.println("My addon loaded successfully");
+    }
+    
+    @Override
+    public void onShutdown() {
+        // Clean up resources
+        System.out.println("My addon shutting down");
+    }
+}
+```

@@ -1,0 +1,929 @@
+---
+title: API Reference
+description: Complete API reference for Cactus addon development.
+---
+
+# API Reference
+
+This section provides a comprehensive reference for the Cactus addon API, including all interfaces, classes, and methods you'll need to develop addons.
+
+## Core Interfaces
+
+### ICactusAddon
+
+The main interface that all addons must implement.
+
+```java
+public interface ICactusAddon {
+    void onInitialize(RegistryBus registryBus);
+    void onLoadComplete();
+    void onShutdown();
+}
+```
+
+#### Methods
+
+- `onInitialize(RegistryBus registryBus)`: Called when the addon is initialized. Use this method to register your content with the Registry Bus.
+- `onLoadComplete()`: Called when all addons have been initialized. Use this for any post-initialization logic.
+- `onShutdown()`: Called when Cactus is shutting down. Use this to clean up resources.
+
+### RegistryBus
+
+The central registry system for addon content.
+
+```java
+public class RegistryBus {
+    public <T> void register(Class<T> type, Function<RegistrationContext, T> factory);
+    public <T> void register(Class<T> type, BiConsumer<List<T>, RegistrationContext> consumer);
+    public <T> void completeAndTake(Class<T> type, BiConsumer<T, Addon> callback);
+    public <T> void completeAndTake(Class<T> type, Consumer<T> callback);
+    public <T> void take(Class<T> type, BiConsumer<T, Addon> callback);
+    public <T> void take(Class<T> type, Consumer<T> callback);
+    public <T> List<T> request(Class<T> type);
+    public <T> void complete(Class<T> type);
+    public Addon getOwner(Object o);
+}
+```
+
+#### Methods
+
+- `register(Class<T> type, Function<RegistrationContext, T> factory)`: Register a single instance of the specified type.
+- `register(Class<T> type, BiConsumer<List<T>, RegistrationContext> consumer)`: Register multiple instances of the specified type.
+- `completeAndTake(Class<T> type, BiConsumer<T, Addon> callback)`: Complete the specified type and call the callback for each registered instance.
+- `completeAndTake(Class<T> type, Consumer<T> callback)`: Complete the specified type and call the callback for each registered instance (without addon information).
+- `take(Class<T> type, BiConsumer<T, Addon> callback)`: Call the callback for each already completed instance of the specified type.
+- `take(Class<T> type, Consumer<T> callback)`: Call the callback for each already completed instance of the specified type (without addon information).
+- `request(Class<T> type)`: Get all completed instances of the specified type.
+- `complete(Class<T> type)`: Manually complete the specified type.
+- `getOwner(Object o)`: Get the addon that owns the specified object.
+
+### RegistrationContext
+
+Provides access to services and handlers during content registration.
+
+```java
+public class RegistrationContext {
+    public <T> T require(Class<T> serviceClass);
+    public void bind(Class<T> serviceClass, T instance);
+}
+```
+
+#### Methods
+
+- `require(Class<T> serviceClass)`: Get an instance of the specified service class.
+- `bind(Class<T> serviceClass, T instance)`: Bind an instance to the specified service class.
+
+## Content Types
+
+### Modules
+
+Client-side features that can be enabled/disabled by users.
+
+#### Base Class
+
+```java
+public abstract class Module {
+    public Module(String name, Category category);
+    public abstract void onEnable();
+    public abstract void onDisable();
+    public boolean active();
+    public String getID();
+    public String getDisplayName();
+    public SettingGroup mainGroup;
+    public boolean enabled();
+    public void enabled(boolean enabled);
+    public void toggle();
+}
+```
+
+#### Example
+
+```java
+public class MyModule extends Module {
+    public MyModule() {
+        super("myModule", ModuleManager.CATEGORY_UTILITY);
+    }
+    
+    public Setting<Boolean> mySetting = mainGroup.add(new BooleanSetting("mySetting", true));
+    
+    @Override
+    public void onEnable() {
+        // Module enabled logic
+    }
+    
+    @Override
+    public void onDisable() {
+        // Module disabled logic
+    }
+}
+```
+
+### Commands
+
+Chat-based commands that provide functionality to users.
+
+#### Interface
+
+```java
+public interface Command {
+    String getName();
+    void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder);
+}
+```
+
+#### Example
+
+```java
+public class MyCommand implements Command {
+    @Override
+    public String getName() {
+        return "mycommand";
+    }
+    
+    @Override
+    public void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
+        builder.executes(context -> {
+            // Command logic
+            return 1;
+        });
+    }
+}
+```
+
+### HUD Elements
+
+Visual elements that appear on the screen.
+
+#### Base Class
+
+```java
+public abstract class HudElement<T extends HudElement<T>> {
+    public HudElement(String id, Function<HudElement<T>, T> factory);
+    public abstract void render(GuiGraphicsExtractor guiGraphics, Font font, float tickDelta);
+    public void update();
+    public String getId();
+    public T buildDefault();
+}
+```
+
+#### Example
+
+```java
+public class MyHudElement extends HudElement<SimpleHudElement> {
+    public MyHudElement() {
+        super("myHudElement", SimpleHudElement::new);
+    }
+    
+    @Override
+    public void render(GuiGraphicsExtractor guiGraphics, Font font, float tickDelta) {
+        // Rendering logic
+    }
+}
+```
+
+### Content Packs
+
+Collections of features that can be enabled/disabled.
+
+#### Base Class
+
+```java
+public class ContentPack {
+    public ContentPack(String id, ActivationPolicy activationPolicy, Item icon);
+    public String getId();
+    public String getName();
+    public boolean isEnabled();
+    public void setEnabled(boolean enabled);
+    public void onEnable();
+    public void onDisable();
+    public Item getIcon();
+    public ActivationPolicy getActivationPolicy();
+}
+```
+
+#### Example
+
+```java
+public class MyContentPack extends ContentPack {
+    public MyContentPack() {
+        super("myContentPack", ActivationPolicy.DEFAULT_ENABLED, Items.DIAMOND);
+    }
+    
+    @Override
+    public void onEnable() {
+        // Pack enabled logic
+    }
+    
+    @Override
+    public void onDisable() {
+        // Pack disabled logic
+    }
+}
+```
+
+### Placeholders
+
+Dynamic text replacements that can be used in various parts of Cactus.
+
+#### Types
+
+```java
+// Placeholder registration
+public record PlaceholderRegistration(String name, Placeholder value) {}
+
+// Placeholder mapper registration
+public record PlaceholderMapperRegistration<T>(Class<T> clazz, String function, PlaceholderFormatResolver.FormatterFunction<T> value) {}
+
+// Placeholder interface
+public interface Placeholder {
+    Object get();
+    boolean isSet();
+}
+```
+
+### Configuration Files
+
+Custom settings and data storage.
+
+#### Base Class
+
+```java
+public abstract class FileConfiguration<T extends FileConfiguration<T>> {
+    public FileConfiguration(String name, ConfigHandler handler);
+    public void init();
+    public void filePreprocess(File file);
+    public abstract JsonObject toJson(TreeSerializerFilter filter);
+    public abstract T fromJson(JsonObject object);
+    public File getFile(File directory);
+    public boolean isFirstInit();
+    public void wrappedInitialize();
+    public Map<Class<?>, FileConfigurationWrapper<?>> getSubConfigurations();
+}
+```
+
+#### Example
+
+```java
+public class MyConfig extends FileConfiguration<MyConfig> {
+    public MyConfig(ConfigHandler handler) {
+        super("myConfig", handler);
+    }
+    
+    @Override
+    public void init() {
+        mainGroup.add(new BooleanSetting("enabled", true));
+    }
+    
+    @Override
+    public JsonObject toJson(TreeSerializerFilter filter) {
+        JsonObject json = new JsonObject();
+        json.addProperty("enabled", mainGroup.get("enabled").get());
+        return json;
+    }
+    
+    @Override
+    public MyConfig fromJson(JsonObject json) {
+        if (json.has("enabled")) {
+            mainGroup.get("enabled").set(json.get("enabled").getAsBoolean());
+        }
+        return this;
+    }
+}
+```
+
+### Screenshot Upload Providers
+
+Custom services for uploading screenshots.
+
+#### Interface
+
+```java
+public abstract class ScreenshotUploadProvider {
+    public abstract String getName();
+    public abstract CompletableFuture<String> upload(BufferedImage image);
+}
+```
+
+#### Example
+
+```java
+public class MyScreenshotProvider extends ScreenshotUploadProvider {
+    @Override
+    public String getName() {
+        return "My Provider";
+    }
+    
+    @Override
+    public CompletableFuture<String> upload(BufferedImage image) {
+        // Upload logic
+        return CompletableFuture.completedFuture("upload-url");
+    }
+}
+```
+
+## Services
+
+### ConfigHandler
+
+Manages all configuration files.
+
+```java
+public class ConfigHandler {
+    public <T extends FileConfiguration<T>> T getConfig(Class<? extends FileConfiguration<T>> clazz);
+    public void register(FileConfiguration<?> config);
+    public boolean save(FileConfiguration<?> config);
+    public boolean load(FileConfiguration<?> config);
+    public void reload();
+    public void save();
+}
+```
+
+### CommandManager
+
+Manages all chat commands.
+
+```java
+public class CommandManager extends FileConfiguration<CommandManager> {
+    public void registerCommand(Command command);
+    public void execute(String command) throws CommandSyntaxException;
+    public List<Command> getCommands();
+}
+```
+
+### ModuleManager
+
+Manages all client-side modules.
+
+```java
+public class ModuleManager extends FileConfiguration<ModuleManager> {
+    public void registerModule(Module module);
+    public void registerCategory(Category category);
+    public Map<Class<? extends Module>, Module> getModules();
+    public List<Category> getCategories();
+    public <T extends Module> T get(Class<T> clazz);
+}
+```
+
+### HudManager
+
+Manages all HUD elements.
+
+```java
+public class HudManager extends FileConfiguration<HudManager> implements Iterable<HudElement<?>> {
+    public boolean addFromRegistry(HudElement<?> element, Consumer<HudElement<?>> configurator);
+    public boolean remove(HudElement<?> element);
+    public List<HudElement<?>> getElements();
+    public Set<HudElement<?>> getElementRegistry();
+}
+```
+
+### ContentPackManager
+
+Manages all content packs.
+
+```java
+public class ContentPackManager extends FileConfiguration<ContentPackManager> {
+    public void registerPack(ContentPack contentPack);
+    public boolean isEnabled(ContentPack contentPack);
+    public Map<String, ContentPack> getContentPacks();
+}
+```
+
+### PlaceholderHandler
+
+Manages all dynamic text placeholders.
+
+```java
+public class PlaceholderHandler {
+    public void registerPlaceholder(String name, PlaceholderGetter valSupplier);
+    public String getPlaceholder(String name);
+    public String replacePlaceholders(String text);
+    public void addOrUpdateDynamic(Identifier id, String content, String requiredState);
+}
+```
+
+## Annotations
+
+### @ContentPackDependent
+
+Marks a class as dependent on a specific content pack.
+
+```java
+@ContentPackDependent("packId")
+public class MyFeature {
+
+}
+```
+
+You can then check the status of your class:
+```java
+ContentPackManager.get().isEnabled(MyFeature.class);
+```
+
+### @CactusAddon (NeoForge only)
+
+Marks a class as a Cactus addon for NeoForge.
+
+```java
+@CactusAddon(modId = "myaddon")
+public class MyAddon implements ICactusAddon {
+    // Implementation
+}
+```
+
+## Utility Classes
+
+### Utils
+
+Provides various utility methods.
+
+```java
+public class Utils {
+    public static boolean isModInstalled(String modId);
+    public static boolean hasInitialized();
+    public static boolean isInWorld();
+    public static <T> T orElse(T value, T fallback);
+    public static String clearFormattingChars(String text);
+    public static Class<?> getDirectCallerClass();
+}
+```
+
+### ChatUtils
+
+Provides utility methods for chat messages.
+
+```java
+public class ChatUtils {
+    public static void info(Component message);
+    public static void error(Component message);
+    public static void actionbar(Component message);
+}
+```
+
+## Settings
+
+Settings are the building blocks of configuration in Cactus addons. They provide user interface elements for modifying configuration values and persisting them between sessions.
+
+### Setting Interfaces
+
+#### ICopyable
+
+Interface for objects that can be copied.
+
+```java
+public interface ICopyable<T> {
+    T copy();
+}
+```
+
+#### IMutableVisibility
+
+Interface for objects with mutable visibility.
+
+```java
+public interface IMutableVisibility<T> {
+    boolean visible();
+    T visibleIf(BooleanSupplier supplier);
+    
+    static void all(BooleanSupplier supplier, IMutableVisibility<?>... instances) {
+        for (IMutableVisibility<?> instance : instances) {
+            instance.visibleIf(supplier);
+        }
+    }
+}
+```
+
+### Base Setting Class
+
+```java
+public abstract class Setting<T> implements ISerializable<T>, IMutableVisibility<Setting<T>>, INamespaced {
+    public Setting(String id, T value);
+    public Setting(String id, T value, Function<T, String> textGetter);
+    
+    // Core methods
+    public void set(T value);
+    public T get();
+    public T getDefaultValue();
+    public void reset();
+    public String getText();
+    public String name();
+    public String description();
+    public boolean visible();
+    public boolean isDefault();
+    
+    // Configuration methods
+    public abstract void save(JsonObject object);
+    public abstract T load(JsonObject object);
+    public abstract AbstractWidget buildWidget();
+    
+    // Visibility and callbacks
+    public Setting<T> visibleIf(BooleanSupplier supplier);
+    public Setting<T> setCallback(Consumer<T> callback);
+    public Setting<T> setExperimental(boolean experimental);
+    
+    // Additional methods
+    public String id();
+    public void setNamespace(String namespace);
+    public String getNamespace();
+    public boolean preLoad(JsonObject object);
+    public SyncData getSyncData();
+    public boolean isSynced();
+    public boolean showsAsWidget();
+    
+    // Base Widget class
+    public abstract class Widget extends AbstractWidget {
+        public final Font textRenderer;
+        public final String name;
+        public final int textYCenter;
+        public final int nameWidth;
+        public int widgetWidth;
+        
+        public abstract void wrappedRender(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta);
+        public void drawBackground(GuiGraphicsExtractor context);
+        public void drawName(GuiGraphicsExtractor context);
+        public void drawDecoration(GuiGraphicsExtractor context);
+    }
+    
+    // SyncData record
+    public record SyncData(String id, JsonObject data) implements ISerializable<SyncData> {
+        public JsonObject toJson(TreeSerializerFilter filter);
+        // fromJson not implemented
+    }
+}
+```
+
+### SettingGroup
+
+Groups related settings together for better organization.
+
+```java
+public class SettingGroup implements ISerializable<SettingGroup>, Iterable<Setting<?>>, ICopyable<SettingGroup>, IMutableVisibility<SettingGroup>, INamespaced {
+    public <T> Setting<T> add(Setting<T> setting);
+    public String name();
+    public String id();
+    public int size();
+    public List<Setting<?>> getSettings();
+    public void setNamespace(String namespace);
+    public void withNamespace(String namespace, Consumer<SettingGroup> consumer);
+    public SettingGroup visibleIf(BooleanSupplier supplier);
+    public boolean visible();
+    public SettingGroup copy();
+}
+```
+
+### SettingContainer
+
+A container for multiple setting groups, used in SubGroupSetting.
+
+```java
+public class SettingContainer implements ISerializable<SettingContainer>, Iterable<SettingGroup>, INamespaced {
+    public SettingGroup buildGroup(String name);
+    public SettingGroup buildGroup(String name, String namespace);
+    public SettingGroup appendGroup(SettingGroup group);
+    public SettingGroup getDefault();
+    public Set<SettingGroup> getSettingGroups();
+    public String getNamespace();
+}
+```
+
+### BooleanSetting
+
+A setting for true/false values.
+
+```java
+public class BooleanSetting extends Setting<Boolean> {
+    public BooleanSetting(String name, Boolean value);
+}
+```
+
+### IntegerSetting
+
+A setting for numeric values with optional range constraints and editor styles.
+
+```java
+public class IntegerSetting extends Setting<Integer> {
+    public enum EditorStyle {
+        Slider,
+        Input
+    }
+    
+    public IntegerSetting(String name, int value);
+    public IntegerSetting(String name, int value, EditorStyle editorStyle);
+    public IntegerSetting(String name, int value, Function<Integer, String> textGetter);
+    
+    // Configuration methods
+    public IntegerSetting min(int min);
+    public IntegerSetting max(int max);
+    public IntegerSetting sliderMin(int min);
+    public IntegerSetting sliderMax(int max);
+}
+```
+
+### StringSetting
+
+A setting for text input with optional length constraints.
+
+```java
+public class StringSetting extends Setting<String> {
+    public StringSetting(String name, String value);
+    public StringSetting setMinLength(int min);
+    public StringSetting setMaxLength(int max);
+}
+```
+
+### DynamicChoiceSetting
+
+A setting for selecting from a dynamically populated list of values.
+
+```java
+public class DynamicChoiceSetting<T> extends Setting<T> {
+    public DynamicChoiceSetting(String id, T value, 
+        Supplier<SequencedCollection<T>> optionProvider, 
+        Function<T, String> nameMapper);
+    
+    // Example usage in module
+    public Setting<String> theme = mainGroup.add(
+        new DynamicChoiceSetting<>(
+            "theme", 
+            "default",
+            this::getAvailableThemes,
+            Theme::getName
+        )
+    );
+    
+    private List<Theme> getAvailableThemes() {
+        return Arrays.asList(Theme.values());
+    }
+}
+```
+
+### EnumSetting
+
+A setting for selecting from enum values.
+
+```java
+public class EnumSetting<T extends Enum<T>> extends Setting<T> {
+    public EnumSetting(String name, T value);
+    public T[] getConstants();
+}
+```
+
+### ColorSetting
+
+A setting for selecting colors with optional alpha channel support.
+
+```java
+public class ColorSetting extends Setting<ColorSetting.ColorValue> {
+    public ColorSetting(String id, ColorValue value);
+    public ColorSetting(String id, ColorValue value, boolean allowOpacity);
+    
+    // Color record
+    public record ColorValue(Color value, boolean usesRgb) implements ICopyable<ColorValue> {
+        public int color();
+        public boolean isFullyTransparent();
+        public static ColorValue of(Color value, boolean usesRgb);
+        public static ColorValue white();
+        public ColorValue copy();
+    }
+}
+```
+
+### KeybindSetting
+
+A setting for configuring keyboard and mouse bindings.
+
+```java
+public class KeybindSetting extends Setting<KeyBind> {
+    public KeybindSetting(String id, KeyBind value);
+    public boolean isPressed();
+}
+```
+
+### FileSetting
+
+A setting for selecting files from the filesystem.
+
+```java
+public class FileSetting extends Setting<File> {
+    public FileSetting(String id, File value);
+}
+```
+
+### Graphic2DSetting
+
+A setting for editing 2D graphics/images.
+
+```java
+public class Graphic2DSetting extends Setting<Graphic2DSetting.Graphic2D> {
+    public Graphic2DSetting(String id, Graphic2D value);
+    
+    // Graphic2D class
+    public static class Graphic2D implements ICopyable<Graphic2D> {
+        public static Graphic2D createEmpty(int width, int height);
+        public static Graphic2D createFromBytes(byte[] bytes);
+        public void paint(int x, int y, int color);
+        public int get(int x, int y);
+        public Identifier rebuildTexture();
+    }
+}
+```
+
+### ColorListSetting
+
+A setting for managing a list of color values.
+
+```java
+public class ColorListSetting extends Setting<List<String>> {
+    public ColorListSetting(String id, String... values);
+    
+    // Example usage in module
+    public Setting<List<String>> colors = mainGroup.add(
+        new ColorListSetting("colors", "#FFFFFF", "#000000")
+    );
+}
+```
+
+### StringListSetting
+
+A setting for managing a list of string values.
+
+```java
+public class StringListSetting extends Setting<List<String>> {
+    public StringListSetting(String id, String... values);
+    
+    // Example usage in module
+    public Setting<List<String>> whitelist = mainGroup.add(
+        new StringListSetting("whitelist", "player1", "player2")
+    );
+}
+```
+
+### EnumSetSetting
+
+A setting for selecting multiple values from an enum.
+
+```java
+public class EnumSetSetting<T extends Enum<T>> extends Setting<Set<T>> {
+    @SafeVarargs
+    public EnumSetSetting(String id, Class<T> type, T... values);
+    
+    // Additional methods
+    public T[] getConstants();
+    public Map<T, Boolean> asMap();
+    
+    // Example usage in module
+    public Setting<Set<Permission>> permissions = mainGroup.add(
+        new EnumSetSetting<>("permissions", Permission.class, Permission.READ, Permission.WRITE)
+    );
+    
+    public enum Permission {
+        READ, WRITE, EXECUTE
+    }
+}
+```
+
+### SubGroupSetting
+
+A setting that opens a sub-screen with additional settings.
+
+```java
+public class SubGroupSetting extends Setting<SettingContainer> {
+    public SubGroupSetting(String id, SettingContainer value, Supplier<CScreen> screenSupplier);
+    
+    // Example usage in module
+    public Setting<SettingContainer> advancedSettings = mainGroup.add(
+        new SubGroupSetting("advanced", new SettingContainer(), AdvancedSettingsScreen::new)
+    );
+}
+```
+
+## Examples
+
+### Complete Addon Example
+
+```java
+@CactusAddon(modId = "myaddon") // this is only required for NeoForge platform support
+public class MyAddon implements ICactusAddon {
+    
+    @Override
+    public void onInitialize(RegistryBus registryBus) {
+        // Register modules
+        registryBus.register(Module.class, ctx -> {
+            List<Module> modules = new ArrayList<>();
+            modules.add(new MyModule1());
+            modules.add(new MyModule2());
+            return modules;
+        });
+        
+        // Register commands
+        registryBus.register(Command.class, ctx -> {
+            List<Command> commands = new ArrayList<>();
+            commands.add(new MyCommand1());
+            commands.add(new MyCommand2());
+            return commands;
+        });
+        
+        // Register HUD elements
+        registryBus.register(HudElement.class, ctx -> new MyHudElement());
+        
+        // Register content pack
+        registryBus.register(ContentPack.class, ctx -> new MyContentPack());
+        
+        // Register configuration
+        registryBus.register(FileConfiguration.class, 
+            ctx -> new MyConfig(ctx.require(ConfigHandler.class))
+        );
+        
+        // Register placeholders
+        registryBus.register(PlaceholderRegistration.class,
+            new PlaceholderRegistration("myValue", new PlaceholderHandler.StaticPlaceholderValue(
+                () -> "Hello World!", // value resolver
+                "Fallback", // fallback if the resolved value is null, or the resolver throws an exception
+                () -> true // condition for your placeholder to be resolved
+            ))
+        );
+
+        // Register a placeholder mapper
+        registryBus.register(PlaceholderMapperRegistration.class,
+            new PlaceholderMapperRegistration<>(String.class, "reverse", 
+                (input, function) -> new StringBuilder(input).reverse().toString()
+            )
+        );
+    }
+    
+    @Override
+    public void onLoadComplete() {
+        // Called when all addons have been initialized
+        System.out.println("My addon loaded successfully");
+    }
+    
+    @Override
+    public void onShutdown() {
+        // Clean up resources
+        System.out.println("My addon shutting down");
+    }
+}
+```
+
+### Module with Settings Example
+
+```java
+public class MyModule extends Module {
+    public MyModule() {
+        super("myModule", ModuleManager.CATEGORY_UTILITY);
+    }
+    
+    public Setting<Boolean> enabled = mainGroup.add(new BooleanSetting("enabled", true));
+    public Setting<Integer> count = mainGroup.add(new IntegerSetting("count", 5).min(1).max(10));
+    public Setting<String> text = mainGroup.add(new StringSetting("text", "Hello"));
+    
+    @Override
+    public void onEnable() {
+        System.out.println("My module enabled with settings: " + enabled.get() + ", " + count.get() + ", " + text.get());
+    }
+    
+    @Override
+    public void onDisable() {
+        System.out.println("My module disabled");
+    }
+}
+```
+
+### Command with Subcommands Example
+
+```java
+public class MyCommand implements Command {
+    @Override
+    public String getName() {
+        return "mycommand";
+    }
+    
+    @Override
+    public void build(LiteralArgumentBuilder<SharedSuggestionProvider> builder) {
+        // Subcommand 1
+        builder.then(literal("sub1")
+            .executes(context -> {
+                ChatUtils.info("Subcommand 1 executed");
+                return 1;
+            }));
+        
+        // Subcommand 2 with argument
+        builder.then(literal("sub2")
+            .then(argument("value", StringArgumentType.string())
+                .executes(context -> {
+                    String value = StringArgumentType.getString(context, "value");
+                    ChatUtils.info("Subcommand 2 executed with value: " + value);
+                    return 1;
+                })));
+    }
+}
+```
+
+## Migrating from v1 to v2
+
+If you're migrating from Cactus Addon API v1 to v2:
+
+1. **Update entrypoint**: Change from `CactusAddon` to `ICactusAddon`
+2. **Update imports**: Update imports to use the v2 package structure
+3. **Use Registry Bus**: Replace direct manager access with Registry Bus registration
+4. **Update settings**: Update settings to use the new setting system

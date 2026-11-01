@@ -1,0 +1,48 @@
+:root,
+::backdrop {
+	--sl-hue-green: 145;
+
+	--sl-color-accent-low: hsl(var(--sl-hue-green), 54%, 20%);
+	--sl-color-accent: hsl(var(--sl-hue-green), 90%, 55%);
+	--sl-color-accent-high: hsl(var(--sl-hue-green), 90%, 80%);
+
+	--sl-color-white: hsl(0, 0%, 100%);
+	--sl-color-gray-1: hsl(150, 12%, 94%);
+	--sl-color-gray-2: hsl(150, 8%, 78%);
+	--sl-color-gray-3: hsl(150, 7%, 57%);
+	--sl-color-gray-4: hsl(150, 8%, 37%);
+	--sl-color-gray-5: hsl(150, 10%, 20%);
+	--sl-color-gray-6: hsl(150, 12%, 11%);
+	--sl-color-black: hsl(160, 15%, 5%);
+
+	--sl-color-backdrop-overlay: hsla(150, 13%, 5%, 0.66);
+}
+
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+	--sl-color-white: hsl(150, 10%, 10%);
+	--sl-color-gray-1: hsl(150, 14%, 16%);
+	--sl-color-gray-2: hsl(150, 10%, 23%);
+	--sl-color-gray-3: hsl(150, 7%, 36%);
+	--sl-color-gray-4: hsl(150, 6%, 56%);
+	--sl-color-gray-5: hsl(150, 6%, 77%);
+	--sl-color-gray-6: hsl(150, 14%, 94%);
+	--sl-color-gray-7: hsl(150, 19%, 97%);
+	--sl-color-black: hsl(0, 0%, 100%);
+
+	--sl-color-accent-high: hsl(var(--sl-hue-green), 80%, 30%);
+	--sl-color-accent: hsl(var(--sl-hue-green), 90%, 42%);
+	--sl-color-accent-low: hsl(var(--sl-hue-green), 88%, 90%);
+
+	--sl-color-backdrop-overlay: hsla(150, 9%, 36%, 0.66);
+}
+
+.hero {
+	padding-bottom: 0.5rem;
+}
+
+@media (min-width: 50rem) {
+	.hero {
+		padding-block: clamp(1rem, calc(0.5rem + 3vmin), 3rem);
+	}
+}

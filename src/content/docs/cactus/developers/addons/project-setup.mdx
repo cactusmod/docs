@@ -1,0 +1,172 @@
+---
+title: Project Setup
+description: Setting up a new Cactus addon project from scratch.
+---
+
+This guide will walk you through setting up a new Cactus addon project from scratch. We'll cover both Fabric and NeoForge setups.
+
+## Prerequisites
+
+- Java Development Kit (JDK) 17 or higher
+- An IDE (IntelliJ IDEA recommended)
+- Basic knowledge of Minecraft mod development
+
+## Creating a New Project
+
+### Using Fabric Template Mod Generator
+
+1. Go to the [Fabric Template Mod Generator](https://fabricmc.net/develop/template/)
+2. Fill in your project details:
+   - Mod ID: Use a unique identifier (e.g., `myaddon`)
+   - Package: Your package name (e.g., `com.example.myaddon`)
+   - Mod Name: Your mod's display name
+   - Mod Version: Initial version (e.g., `1.0.0`)
+3. **Important**: Make sure *"Split client and common sources"* is **disabled**
+4. Download the generated project zip file
+5. Extract the zip file and open the project in your IDE
+
+### Using NeoForge Setup
+
+For NeoForge, you can use the [NeoForge Mod Generator](https://neoforged.net/mod-generator/) a similar way to the one from fabric, or create a new project from scratch using your preferred build system.
+
+## Adding Cactus as a Dependency
+
+### Fabric Setup
+
+Navigate to your `build.gradle` file and add Cactus as a dependency:
+
+```groovy
+dependencies {
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Add Cactus as a local library here
+    modImplementation fileTree(dir: 'libs', include: ['cactus-0.9.96.jar'])
+}
+```
+
+Place the Cactus JAR file in the `libs` directory of your project.
+
+### NeoForge Setup
+
+For NeoForge, add Cactus as a dependency in your `build.gradle`:
+
+```groovy
+dependencies {
+    // Minecraft and NeoForge dependencies
+    minecraft 'net.neoforged:neoforge:20.4.0'
+    
+    // Add Cactus as a local library here
+    implementation files('libs/cactus-0.9.96.jar')
+}
+```
+
+## Setting Up Entrypoints
+
+### Fabric Entrypoints
+
+Update the `entrypoints` section in your `fabric.mod.json`:
+
+```json
+"entrypoints": {
+    "cactus": [
+      "com.example.myaddon.MyAddon"
+    ]
+}
+```
+
+### NeoForge Entrypoints
+
+For NeoForge, you need to add the `@CactusAddon` annotation to your main class:
+
+```java
+@CactusAddon(modId = "myaddon")
+public class MyAddon implements ICactusAddon {
+    // Implementation
+}
+```
+
+And ensure your `META-INF/neoforge.mods.toml` includes:
+
+```toml
+modId="myaddon"
+```
+
+## Creating the Main Addon Class
+
+Your main addon class must implement the `ICactusAddon` interface:
+
+```java
+public class MyAddon implements ICactusAddon {
+    
+    @Override
+    public void onInitialize(RegistryBus registryBus) {
+        // Register your addon content here
+    }
+
+    @Override
+    public void onLoadComplete() {
+        // Called when all addons have been initialized
+    }
+
+    @Override
+    public void onShutdown() {
+        // Called when Cactus is shutting down
+    }
+
+}
+```
+
+## Building Your Addon
+
+Run the following command in your project directory:
+
+```bash
+./gradlew build
+```
+
+Your addon JAR will be located in `build/libs/`.
+
+## Testing Your Addon
+
+1. Place your built addon JAR in your Minecraft instance's `mods` folder
+2. Make sure Cactus is also installed
+3. Start the game and check the console for any errors
+4. Verify that your addon appears in the Cactus addons list (if applicable)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **NoClassDefFoundError for Cactus classes**
+   - Ensure Cactus is properly added as a dependency
+   - Check that your IDE has the Cactus JAR in the classpath
+
+2. **Addon not loading**
+   - Verify your entrypoint configuration
+   - Check the console for error messages
+   - Ensure your mod ID is unique
+
+3. **RegistryBus not found**
+   - Make sure you're using the correct import: `com.dwarslooper.cactus.client.addon.v2.RegistryBus`
+
+## Next Steps
+
+Once your addon is set up and working, you can start adding content:
+
+- [Registering Modules](../modules)
+- [Registering Commands](../commands)
+- [Registering HUD Elements](../hud-elements)
+- [Registering Content Packs](../content-packs)
+- [Using the Registry Bus](../registry-bus)
+
+## Additional Resources
+
+- [Fabric Mod Development Documentation](https://fabricmc.net/wiki/doku.php:title=development)
+- [NeoForge Mod Development Documentation](https://neoforged.net/pages/gettingstarted/)
+- [Cactus Addon API Reference](../api-reference)

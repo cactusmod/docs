@@ -1,0 +1,169 @@
+---
+title: Modules
+description: Creating client-side modules for Cactus addons.
+---
+
+Modules are toggleable features that can be enabled/disabled. They're the core building blocks of Cactus addons, providing functionality that users can toggle on and off.
+
+## Overview
+
+Modules in Cactus extend the base `Module` class and provide specific functionality that can be activated by the user.
+
+## Creating a Module
+
+### Basic Module Structure
+
+```java
+public class MyModule extends Module {
+    public MyModule() {
+        super("myModule", ModuleManager.CATEGORY_UTILITY);
+    }
+    
+    @Override
+    public void onEnable() {
+        // Module enabled logic
+    }
+    
+    @Override
+    public void onDisable() {
+        // Module disabled logic
+    }
+}
+```
+
+### Registration
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(Module.class, ctx -> new MyModule());
+}
+```
+
+## Module Categories
+
+Modules are organized into categories for better organization. Cactus provides several built-in categories:
+
+- `CATEGORY_UTILITY` - Utility and quality-of-life features
+- `CATEGORY_QOL` - Quality of life improvements
+- `CATEGORY_BUILDING` - Building assistance tools
+- `CATEGORY_REDSTONE` - Redstone-related features
+- `CATEGORY_RENDERING` - Visual and rendering features
+
+### Custom Categories
+
+You can register custom categories:
+
+```java
+@Override
+public void onInitialize(RegistryBus registryBus) {
+    registryBus.register(Category.class, ctx -> {
+        return new Category("myCategory", Items.CUSTOM_ICON);
+    });
+    
+    registryBus.register(Module.class, ctx -> new MyModule());
+}
+```
+
+## Module Settings
+
+Modules can have configurable settings that users can adjust. Settings are organized into groups, typically with a main group for the module's general settings.
+
+### Basic Settings
+
+```java
+public class MyModule extends Module {
+    public MyModule() {
+        super("myModule", ModuleManager.CATEGORY_UTILITY);
+    }
+    
+    // "settings" is a public field in the base Module class
+    public SettingGroup mainGroup = settings.getDefault();
+
+    // Integer setting with range
+    public Setting<Integer> count = mainGroup.add(
+        new IntegerSetting("count", 5).min(1).max(10)
+    );
+    
+    // String setting
+    public Setting<String> text = mainGroup.add(new StringSetting("text", "Hello"));
+    
+    // Enum setting
+    public Setting<Mode> mode = mainGroup.add(
+        new EnumSetting<>("mode", Mode.DEFAULT)
+    );
+    
+    @Override
+    public void onEnable() {
+        // Use settings
+        System.out.println("Module enabled with count: " + count.get());
+    }
+    
+    @Override
+    public void onDisable() {
+        // Cleanup
+    }
+    
+    public enum Mode {
+        DEFAULT, ADVANCED, EXPERT
+    }
+}
+```
+
+## Module Lifecycle
+
+### Initialization
+
+The `Module` constructor is called when the module is registered:
+
+```java
+public MyModule() {
+    super("myModule", ModuleManager.CATEGORY_UTILITY);
+    // Initialize settings here
+}
+```
+
+### Enabling
+
+The `onEnable()` method is called when the module is activated:
+
+```java
+@Override
+public void onEnable() {
+    if (myBoolean.get()) {
+        // Do something with boolean setting
+    }
+}
+```
+
+### Disabling
+
+The `onDisable()` method is called when the module is deactivated:
+
+```java
+@Override
+public void onDisable() {
+    // perform cleanup
+}
+```
+
+### Event Handling
+
+Modules can subscribe to Cactus events:
+
+```java
+public class MyModule extends Module {
+    @EventHandler
+    public void onClientTick(ClientTickEvent event) {
+        // called on client tick end
+    }
+    
+    @EventHandler
+    public void onChatReceive(MessageReceiveEvent event) {
+        Component message = event.getMessage();
+        if(message.getString().contains("foo")) {
+            event.cancel(); // cancel the event - will make the chat message not show in chat
+        }
+    }
+}
+```

@@ -1,0 +1,50 @@
+---
+title: Overview
+description: An introduction to developing addons for the Cactus Mod.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Cactus Addons are a powerful way to extend the functionality of the Cactus Mod without modifying the core mod. Addons can register new modules, commands, HUD elements, content packs, and more using the addon API.
+
+## Quick Start
+
+<CardGrid>
+	<LinkCard
+		title="Project Setup"
+		description="Setup your cactus addon"
+		href="/cactus/developers/addons/project-setup"
+	/>
+	<LinkCard
+		title="API Reference"
+		description="Some API references for commonly used stuff"
+		href="/cactus/developers/addons/api-reference"
+	/>
+</CardGrid>
+
+## What are Addons?
+
+Addons are separate mods that integrate with Cactus through a dedicated API. They follow the standard mod loading process (Fabric/NeoForge) but use Cactus-specific entrypoints and systems to register their content.
+
+## Supported Content Types
+
+Addons can register the following types of content:
+
+- **Modules**: Client-side features that can be enabled/disabled
+- **Commands**: Chat commands for various functionality
+- **HUD Elements**: Custom display elements on the HUD
+- **Content Packs**: Themed content collections
+- **Placeholders**: Dynamic text replacements
+- **Configuration Files**: Custom settings and data
+- **Screenshot Upload Providers**: Custom image upload services
+
+## Feature Documentation
+
+Detailed documentation for each feature type:
+- [Modules](./features/modules) - Client-side features with settings and controls
+- [Commands](./features/commands) - Chat-based interfaces for user interaction
+- [HUD Elements](./features/hud-elements) - Visual components for screen display
+- [Content Packs](./features/content-packs) - Grouped features with enable/disable options
+- [Placeholders](./features/placeholders) - Dynamic text replacements
+- [Configuration](./features/configuration) - Persistent settings and data storage
+- [Screenshot Providers](./features/screenshot-providers) - Custom image upload services
