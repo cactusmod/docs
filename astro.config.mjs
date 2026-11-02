@@ -18,9 +18,13 @@ export default defineConfig({
 			favicon: '/favicon.png',
 			customCss: ['./src/custom.css'],
 			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/cactusmod/documentation' },
-				{ icon: 'discord', label: 'Discord', href: 'https://cactusmod.xyz/go/?discord' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/cactusmod/docs' },
+				{ icon: 'discord', label: 'Discord', href: 'https://cactusmod.xyz/go/discord' },
 			],
+			editLink: {
+				baseUrl: "https://github.com/cactusmod/docs/edit/main/",
+			},
+      		lastUpdated: true,
 			sidebar: [
 				{
 					label: 'CactusMod',
