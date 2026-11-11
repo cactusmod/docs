@@ -33,7 +33,7 @@ export default defineConfig({
 				{
 					label: 'Cactus Mod',
 					items: [
-						'cactus',
+						{ label: "Overview", link: "/cactus" },
 						{ label: 'Getting Started', items: ['cactus/users/getting-started/installation'] },
 						{ label: 'Features', items: ['cactus/users/features/cosmetics', 'cactus/users/features/placeholders'] },
 						{ label: 'Developer Documentation', items: [
