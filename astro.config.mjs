@@ -31,7 +31,7 @@ export default defineConfig({
 					items: [
 						'cactus',
 						{ label: 'Getting Started', items: ['cactus/users/getting-started/installation'] },
-						{ label: 'Features', items: ['cactus/users/features/cosmetics'] },
+						{ label: 'Features', items: ['cactus/users/features/cosmetics', 'cactus/users/features/placeholders'] },
 						{ label: 'Developer Documentation', items: [
 							{ label: 'Addons', items: [
 								'cactus/developers/addons',
