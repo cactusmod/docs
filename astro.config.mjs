@@ -27,7 +27,11 @@ export default defineConfig({
       		lastUpdated: true,
 			sidebar: [
 				{
-					label: 'CactusMod',
+					label: 'All Projects',
+					link: '/'
+				},
+				{
+					label: 'Cactus Mod',
 					items: [
 						'cactus',
 						{ label: 'Getting Started', items: ['cactus/users/getting-started/installation'] },
